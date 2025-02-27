@@ -35,7 +35,7 @@ class RestaurantController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[Route('/{id}', name: 'show', methods: ['GET'])]
     public function show(int $id): Response
     {
         $restaurant = $this->repository->find($id);
