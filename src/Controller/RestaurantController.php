@@ -3,13 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Restaurant;
-use DateTimeImmutable ;
-
 use App\Repository\RestaurantRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Transport\Serialization\Serializer;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -26,22 +25,34 @@ class RestaurantController extends AbstractController
         private UrlGeneratorInterface $urlGenerator
     ) {}
 //************************************** */
-#[Route(methods: ['POST'])]
-public function new(Request $request): JsonResponse
+
+#[Route('/restaurant', methods: ['POST'])]
+public function new(Request $request, SerializerInterface $serializer, EntityManagerInterface $manager, UrlGeneratorInterface $urlGenerator): JsonResponse
 {
     // Désérialisation des données envoyées dans la requête JSON vers l'objet Restaurant
-    $restaurant = $this->serializer->deserialize($request->getContent(), Restaurant::class, 'json');
+    $restaurant = $serializer->deserialize($request->getContent(), Restaurant::class, 'json');
 
     // Définir la date de création
     $restaurant->setCreatedAt(new \DateTimeImmutable());
 
-    // Persist l'entité
-    $this->manager->persist($restaurant);
-    $this->manager->flush();
+    // Persister l'entité
+    $manager->persist($restaurant);
+    $manager->flush();
 
-    // Retourner une réponse JSON avec un message de succès
-    return new JsonResponse(['message' => 'Restaurant créé'], Response::HTTP_CREATED);
+    // Sérialisation correcte de l'objet
+    $responseData = $serializer->serialize($restaurant, 'json');
+
+    // Génération de l'URL du nouvel objet
+    $location = $urlGenerator->generate(
+        'app_api_restaurant_show',
+        ['id' => $restaurant->getId()],
+        UrlGeneratorInterface::ABSOLUTE_URL
+    );
+
+    // Retourner une réponse JSON avec l'objet créé et un header Location
+    return new JsonResponse($responseData, Response::HTTP_CREATED, ['Location' => $location], true);
 }
+
 
 // ************************************
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
