@@ -17,13 +17,13 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 #[Route('/api', name:'app_api_')]
 
-final class SecurityController extends AbstractController
+class SecurityController extends AbstractController
 {
     public function __construct(
         private SerializerInterface $serializer,
         private EntityManagerInterface $entityManager
     ) {}
-//******************* */
+//******************* route inscription */
     #[Route('/registration', name: 'registration', methods: ['POST'])]
     public function register(Request $request, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
@@ -53,7 +53,7 @@ final class SecurityController extends AbstractController
             return new JsonResponse(['error' => 'Invalid request: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
     }
-    //************************** */
+    //************************** route connexion */
     #[Route('/login', name: 'login', methods: ['POST'])]
     public function login(#[CurrentUser] ?User $user): JsonResponse
     {
