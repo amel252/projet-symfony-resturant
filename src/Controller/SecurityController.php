@@ -13,6 +13,8 @@ use Symfony\Component\Messenger\Transport\Serialization\Serializer;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+
 #[Route('/api', name:'app_api_')]
 
 final class SecurityController extends AbstractController
@@ -21,7 +23,7 @@ final class SecurityController extends AbstractController
         private SerializerInterface $serializer,
         private EntityManagerInterface $entityManager
     ) {}
-
+//******************* */
     #[Route('/registration', name: 'registration', methods: ['POST'])]
     public function register(Request $request, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
@@ -50,5 +52,18 @@ final class SecurityController extends AbstractController
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Invalid request: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
+    }
+    //************************** */
+    #[Route('/login', name: 'login', methods: ['POST'])]
+    public function login(#[CurrentUser] ?User $user): JsonResponse
+    {
+        if (null === $user) {
+            return new JsonResponse(['message' => 'Missing credentials'], Response::HTTP_UNAUTHORIZED);
+        }
+        return new JsonResponse([
+            'user'  => $user->getUserIdentifier(),
+            'roles' => $user->getRoles(),
+            'apiToken' => method_exists($user, 'getApiToken') ? $user->getApiToken() : null,
+    ], Response::HTTP_OK);
     }
 }
